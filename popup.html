@@ -211,6 +211,24 @@
       text-align: center;
     }
     
+    .domain-badge {
+      background: var(--secondary-bg);
+      color: var(--primary-dark);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 8px 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .domain-badge.warning {
+      background: #FFF4E5;
+      color: #8A4B00;
+      border-bottom-color: #FFE0B2;
+    }
+    
     .details-panel {
       width: 60%;
       display: flex;
@@ -364,6 +382,7 @@
 
   <div class="main-container">
     <div class="log-list" id="log-list">
+      <div class="domain-badge" id="domain-badge" style="display: none;"></div>
       <div class="timeline-bg"></div>
       <div class="empty-state">No requests captured yet</div>
     </div>

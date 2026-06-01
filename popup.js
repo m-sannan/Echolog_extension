@@ -8,10 +8,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!tab) return;
 
   chrome.runtime.sendMessage({ action: "getLogs", tabId: tab.id }, (response) => {
-    if (response && response.logs && response.logs.length > 0) {
-      currentLogs = response.logs;
-      renderLogList();
+    const badge = document.getElementById('domain-badge');
+    badge.style.display = 'block';
+    
+    if (response && response.isTracking) {
+      let domainName = "this tab";
+      try { domainName = new URL(tab.url).hostname; } catch(e) {}
+      badge.textContent = `Tracking: ${domainName}`;
+      badge.className = 'domain-badge';
+      
+      if (response.logs && response.logs.length > 0) {
+        currentLogs = response.logs;
+      }
+    } else {
+      badge.innerHTML = `Not tracking this tab. <a href="#" id="quick-track-btn" style="color: #8A4B00; text-decoration: underline; margin-left: 5px;">Track this domain</a>`;
+      badge.className = 'domain-badge warning';
+      
+      setTimeout(() => {
+        const quickBtn = document.getElementById('quick-track-btn');
+        if (quickBtn) {
+          quickBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            let domainToAdd;
+            try { domainToAdd = new URL(tab.url).hostname; } catch(err) { return; }
+            chrome.storage.local.get('allowedDomains', (result) => {
+              const domains = result.allowedDomains || [];
+              if (!domains.includes(domainToAdd)) {
+                domains.push(domainToAdd);
+                chrome.storage.local.set({ allowedDomains: domains }, () => {
+                   chrome.tabs.reload(tab.id); // Reload tab to start tracking
+                   window.close(); // Close popup
+                });
+              }
+            });
+          });
+        }
+      }, 0);
     }
+    renderLogList();
   });
 
   document.getElementById('search-bar').addEventListener('input', renderLogList);
@@ -75,8 +109,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function renderLogList() {
   const listContainer = document.getElementById('log-list');
-  // keep the timeline background line
-  listContainer.innerHTML = '<div class="timeline-bg"></div>';
+  const badge = document.getElementById('domain-badge');
+  // keep the timeline background line and badge
+  listContainer.innerHTML = '';
+  if (badge) listContainer.appendChild(badge);
+  
+  const timelineBg = document.createElement('div');
+  timelineBg.className = 'timeline-bg';
+  listContainer.appendChild(timelineBg);
 
   const query = document.getElementById('search-bar').value.toLowerCase();
   const xhrOnly = document.getElementById('xhr-filter').checked;
