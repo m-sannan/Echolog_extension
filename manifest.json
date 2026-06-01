@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "EchoLog",
+  "version": "1.0",
+  "description": "Background API payload logger for specific engineering domains.",
+  "icons": {
+    "16": "echolog_logo.png",
+    "48": "echolog_logo.png",
+    "128": "echolog_logo.png"
+  },
+  "permissions": [
+    "debugger",
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "echolog_logo.png",
+      "48": "echolog_logo.png",
+      "128": "echolog_logo.png"
+    }
+  }
+}
