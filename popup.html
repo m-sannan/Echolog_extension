@@ -28,6 +28,12 @@
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-4">
           <span class="font-headline-sm text-headline-sm font-bold text-on-surface">EchoLog</span>
+          <select id="session-selector" class="hidden bg-surface-container-low border border-outline-variant rounded-xl px-3 py-1.5 text-body-sm font-body-sm text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary min-w-[200px]">
+            <!-- Options injected by JS -->
+          </select>
+          <button id="track-current-btn" class="hidden px-3 py-1.5 bg-primary-container text-on-primary-container hover:brightness-110 rounded-xl text-body-sm font-bold transition-all shadow-sm flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px]">add</span> Track Current
+          </button>
         </div>
       </div>
       <!-- Toolbar Actions -->

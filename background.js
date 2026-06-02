@@ -1,5 +1,6 @@
 // In-memory cache tracking traffic by Tab ID
 const networkLogs = {};
+const sessionDetails = {}; // Stores { domain, url } for active tabs
 const attachedTabs = new Set();
 
 // Default domains (Empty for open source version)
@@ -24,7 +25,11 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       if (!attachedTabs.has(tabId)) {
         startTracking(tabId, tab.url);
       } else {
-        // Already tracking, just insert navigation marker
+        // Already tracking, update session details and insert navigation marker
+        let domainName = 'Unknown Domain';
+        try { domainName = new URL(tab.url).hostname; } catch(e) {}
+        sessionDetails[tabId] = { domain: domainName, url: tab.url };
+
         if (networkLogs[tabId]) {
           networkLogs[tabId].push({
             type: 'NAVIGATE',
@@ -41,6 +46,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         });
         attachedTabs.delete(tabId);
         delete networkLogs[tabId];
+        delete sessionDetails[tabId];
       }
     }
   }
@@ -53,6 +59,11 @@ function startTracking(tabId, initialUrl) {
     if (chrome.runtime.lastError) return;
     
     attachedTabs.add(tabId);
+    
+    let domainName = 'Unknown Domain';
+    try { domainName = new URL(initialUrl).hostname; } catch(e) {}
+    sessionDetails[tabId] = { domain: domainName, url: initialUrl };
+    
     networkLogs[tabId] = [{
       type: 'NAVIGATE',
       url: initialUrl,
@@ -118,11 +129,19 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
 chrome.debugger.onDetach.addListener((source, reason) => {
   attachedTabs.delete(source.tabId);
   delete networkLogs[source.tabId];
+  delete sessionDetails[source.tabId];
 });
 
 // Expose logs and current tracking status to the popup when clicked
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "getLogs") {
+  if (message.action === "getAllSessions") {
+    const sessions = Array.from(attachedTabs).map(tabId => ({
+      tabId: tabId,
+      domain: sessionDetails[tabId]?.domain || 'Unknown Domain',
+      url: sessionDetails[tabId]?.url || ''
+    }));
+    sendResponse({ sessions });
+  } else if (message.action === "getLogs") {
     sendResponse({ 
       isTracking: attachedTabs.has(message.tabId),
       logs: networkLogs[message.tabId] || [] 

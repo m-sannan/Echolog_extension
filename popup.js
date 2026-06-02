@@ -3,69 +3,117 @@ let selectedLog = null;
 let currentTab = "headers";
 let currentDataToCopy = "";
 
+let activeBrowserTab = null;
+let currentlyViewingTabId = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab) return;
-
-  chrome.runtime.sendMessage({ action: "getLogs", tabId: tab.id }, (response) => {
-    const emptyStateView = document.getElementById('empty-state-view');
-    const splitPaneView = document.getElementById('split-pane-view');
-    const domainBannerText = document.getElementById('domain-banner-text');
-    const quickTrackBtn = document.getElementById('quick-track-btn');
-    const toolbarActions = document.getElementById('toolbar-actions');
+  activeBrowserTab = tab;
+  
+  chrome.runtime.sendMessage({ action: "getAllSessions" }, (response) => {
+    const sessions = response?.sessions || [];
+    const sessionSelector = document.getElementById('session-selector');
+    const trackCurrentBtn = document.getElementById('track-current-btn');
     
-    if (response && response.isTracking) {
-      emptyStateView.classList.add('hidden');
-      emptyStateView.classList.remove('flex');
-      splitPaneView.classList.remove('hidden');
-      toolbarActions.classList.remove('opacity-50', 'pointer-events-none');
+    sessionSelector.innerHTML = '';
+    let activeTabIsTracked = sessions.some(s => s.tabId === tab?.id);
+    
+    if (sessions.length > 0) {
+      sessionSelector.classList.remove('hidden');
+      sessions.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.tabId;
+        opt.textContent = `${s.domain} (Tab ${s.tabId})`;
+        sessionSelector.appendChild(opt);
+      });
       
-      let domainName = "this tab";
-      try { domainName = new URL(tab.url).hostname; } catch(e) {}
-      domainBannerText.textContent = `Tracking: ${domainName}`;
-      domainBannerText.className = "text-code-sm font-code-sm text-primary font-bold";
-      quickTrackBtn.classList.add('hidden');
-      
-      if (response.logs && response.logs.length > 0) {
-        currentLogs = response.logs;
+      if (activeTabIsTracked) {
+        sessionSelector.value = tab.id;
+        currentlyViewingTabId = tab.id;
+        trackCurrentBtn.classList.add('hidden');
+      } else {
+        currentlyViewingTabId = sessions[0].tabId;
+        sessionSelector.value = currentlyViewingTabId;
+        if (tab) trackCurrentBtn.classList.remove('hidden');
       }
+      
+      loadLogsForTab(currentlyViewingTabId);
     } else {
-      emptyStateView.classList.remove('hidden');
-      emptyStateView.classList.add('flex');
-      splitPaneView.classList.add('hidden');
-      toolbarActions.classList.add('opacity-50', 'pointer-events-none');
+      sessionSelector.classList.add('hidden');
+      trackCurrentBtn.classList.add('hidden');
+      currentlyViewingTabId = tab?.id;
+      loadLogsForTab(currentlyViewingTabId);
     }
-    renderLogList();
   });
+
+  document.getElementById('session-selector').addEventListener('change', (e) => {
+    currentlyViewingTabId = parseInt(e.target.value, 10);
+    loadLogsForTab(currentlyViewingTabId);
+  });
+
+  function loadLogsForTab(tabId) {
+    if (!tabId) return;
+    chrome.runtime.sendMessage({ action: "getLogs", tabId: tabId }, (response) => {
+      const emptyStateView = document.getElementById('empty-state-view');
+      const splitPaneView = document.getElementById('split-pane-view');
+      const domainBannerText = document.getElementById('domain-banner-text');
+      const quickTrackBtn = document.getElementById('quick-track-btn');
+      const toolbarActions = document.getElementById('toolbar-actions');
+      
+      if (response && response.isTracking) {
+        emptyStateView.classList.add('hidden');
+        emptyStateView.classList.remove('flex');
+        splitPaneView.classList.remove('hidden');
+        toolbarActions.classList.remove('opacity-50', 'pointer-events-none');
+        
+        let displayDomain = "this tab";
+        const sessionOpt = document.querySelector(`#session-selector option[value="${tabId}"]`);
+        if (sessionOpt) displayDomain = sessionOpt.textContent.split(' ')[0];
+        
+        domainBannerText.textContent = `Tracking: ${displayDomain}`;
+        domainBannerText.className = "text-code-sm font-code-sm text-primary font-bold";
+        quickTrackBtn.classList.add('hidden');
+        
+        currentLogs = response.logs || [];
+      } else {
+        emptyStateView.classList.remove('hidden');
+        emptyStateView.classList.add('flex');
+        splitPaneView.classList.add('hidden');
+        toolbarActions.classList.add('opacity-50', 'pointer-events-none');
+        currentLogs = [];
+      }
+      selectedLog = null;
+      renderLogList();
+      updateDetailView();
+    });
+  }
 
   const attachTracking = (e) => {
     if(e) e.preventDefault();
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const activeTab = tabs[0];
-      if(!activeTab) return;
-      let domainToAdd;
-      try { domainToAdd = new URL(activeTab.url).hostname; } catch(err) { return; }
-      chrome.storage.local.get('allowedDomains', (result) => {
-        const domains = result.allowedDomains || [];
-        if (!domains.includes(domainToAdd)) {
-          domains.push(domainToAdd);
-          chrome.storage.local.set({ allowedDomains: domains }, () => {
-             chrome.runtime.sendMessage({ action: "startTracking", tabId: activeTab.id, url: activeTab.url }, () => {
-               window.close();
-             });
-          });
-        } else {
-          // If already in allowed domains but not attached (e.g. extension reloaded)
-          chrome.runtime.sendMessage({ action: "startTracking", tabId: activeTab.id, url: activeTab.url }, () => {
-            window.close();
-          });
-        }
-      });
+    if(!activeBrowserTab) return;
+    const activeTab = activeBrowserTab;
+    let domainToAdd;
+    try { domainToAdd = new URL(activeTab.url).hostname; } catch(err) { return; }
+    chrome.storage.local.get('allowedDomains', (result) => {
+      const domains = result.allowedDomains || [];
+      if (!domains.includes(domainToAdd)) {
+        domains.push(domainToAdd);
+        chrome.storage.local.set({ allowedDomains: domains }, () => {
+           chrome.runtime.sendMessage({ action: "startTracking", tabId: activeTab.id, url: activeTab.url }, () => {
+             window.close();
+           });
+        });
+      } else {
+        chrome.runtime.sendMessage({ action: "startTracking", tabId: activeTab.id, url: activeTab.url }, () => {
+          window.close();
+        });
+      }
     });
   };
 
   document.getElementById('empty-track-btn').addEventListener('click', attachTracking);
   document.getElementById('quick-track-btn').addEventListener('click', attachTracking);
+  document.getElementById('track-current-btn').addEventListener('click', attachTracking);
 
   document.getElementById('search-bar').addEventListener('input', renderLogList);
   document.getElementById('xhr-filter').addEventListener('change', renderLogList);
