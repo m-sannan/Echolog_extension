@@ -36,8 +36,9 @@ document.addEventListener('DOMContentLoaded', async () => {
               if (!domains.includes(domainToAdd)) {
                 domains.push(domainToAdd);
                 chrome.storage.local.set({ allowedDomains: domains }, () => {
-                   chrome.tabs.reload(tab.id); // Reload tab to start tracking
-                   window.close(); // Close popup
+                   chrome.runtime.sendMessage({ action: "startTracking", tabId: tab.id, url: tab.url }, () => {
+                     window.close(); // Close popup
+                   });
                 });
               }
             });

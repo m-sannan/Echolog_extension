@@ -127,5 +127,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       isTracking: attachedTabs.has(message.tabId),
       logs: networkLogs[message.tabId] || [] 
     });
+  } else if (message.action === "startTracking") {
+    if (!attachedTabs.has(message.tabId)) {
+      startTracking(message.tabId, message.url);
+    }
+    sendResponse({ success: true });
   }
 });
