@@ -17,6 +17,6 @@
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #b9ccb2; border-radius: 2px; }
-  .tab-active { border-bottom: 2px solid #3b82f6; color: #2563eb !important; }
+  .tab-active { border-bottom: 2px solid #9aeb71; color: #153d08 !important; }
   .code-block { font-family: 'JetBrains Mono', monospace; }
 }

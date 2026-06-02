@@ -891,7 +891,7 @@ body {
 
 .border-primary {
   --tw-border-opacity: 1;
-  border-color: rgb(59 130 246 / var(--tw-border-opacity));
+  border-color: rgb(154 235 113 / var(--tw-border-opacity));
 }
 
 .border-transparent {
@@ -902,9 +902,9 @@ body {
   background-color: rgb(21 28 39 / 0.5);
 }
 
-.bg-\[\#3b82f6\] {
+.bg-\[\#9aeb71\] {
   --tw-bg-opacity: 1;
-  background-color: rgb(59 130 246 / var(--tw-bg-opacity));
+  background-color: rgb(154 235 113 / var(--tw-bg-opacity));
 }
 
 .bg-\[\#eab308\] {
@@ -919,16 +919,16 @@ body {
 
 .bg-primary {
   --tw-bg-opacity: 1;
-  background-color: rgb(59 130 246 / var(--tw-bg-opacity));
+  background-color: rgb(154 235 113 / var(--tw-bg-opacity));
 }
 
 .bg-primary-container {
   --tw-bg-opacity: 1;
-  background-color: rgb(219 234 254 / var(--tw-bg-opacity));
+  background-color: rgb(225 250 214 / var(--tw-bg-opacity));
 }
 
 .bg-primary-container\/10 {
-  background-color: rgb(219 234 254 / 0.1);
+  background-color: rgb(225 250 214 / 0.1);
 }
 
 .bg-secondary-fixed-dim {
@@ -1164,17 +1164,17 @@ body {
 
 .text-on-primary {
   --tw-text-opacity: 1;
-  color: rgb(255 255 255 / var(--tw-text-opacity));
+  color: rgb(21 61 8 / var(--tw-text-opacity));
 }
 
 .text-on-primary-container {
   --tw-text-opacity: 1;
-  color: rgb(30 58 138 / var(--tw-text-opacity));
+  color: rgb(21 61 8 / var(--tw-text-opacity));
 }
 
 .text-on-primary-fixed {
   --tw-text-opacity: 1;
-  color: rgb(30 58 138 / var(--tw-text-opacity));
+  color: rgb(21 61 8 / var(--tw-text-opacity));
 }
 
 .text-on-surface {
@@ -1189,7 +1189,7 @@ body {
 
 .text-primary {
   --tw-text-opacity: 1;
-  color: rgb(59 130 246 / var(--tw-text-opacity));
+  color: rgb(154 235 113 / var(--tw-text-opacity));
 }
 
 .underline {
@@ -1231,7 +1231,7 @@ body {
 }
 
 .shadow-primary-container\/20 {
-  --tw-shadow-color: rgb(219 234 254 / 0.2);
+  --tw-shadow-color: rgb(225 250 214 / 0.2);
   --tw-shadow: var(--tw-shadow-colored);
 }
 
@@ -1285,8 +1285,8 @@ body {
 }
 
 .tab-active {
-  border-bottom: 2px solid #3b82f6;
-  color: #2563eb !important;
+  border-bottom: 2px solid #9aeb71;
+  color: #153d08 !important;
 }
 
 .code-block {
@@ -1320,7 +1320,7 @@ body {
 
 .focus\:border-primary:focus {
   --tw-border-opacity: 1;
-  border-color: rgb(59 130 246 / var(--tw-border-opacity));
+  border-color: rgb(154 235 113 / var(--tw-border-opacity));
 }
 
 .focus\:ring-1:focus {
@@ -1331,7 +1331,7 @@ body {
 
 .focus\:ring-primary:focus {
   --tw-ring-opacity: 1;
-  --tw-ring-color: rgb(59 130 246 / var(--tw-ring-opacity));
+  --tw-ring-color: rgb(154 235 113 / var(--tw-ring-opacity));
 }
 
 .group:hover .group-hover\:text-on-surface {
