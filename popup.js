@@ -1,53 +1,71 @@
 let currentLogs = [];
 let selectedLog = null;
-let currentTab = "headers"; // headers, payload, preview, response
-let currentDataToCopy = ""; // Stores text for the copy button
+let currentTab = "headers";
+let currentDataToCopy = "";
 
 document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab) return;
 
   chrome.runtime.sendMessage({ action: "getLogs", tabId: tab.id }, (response) => {
-    const badge = document.getElementById('domain-badge');
-    badge.style.display = 'block';
+    const emptyStateView = document.getElementById('empty-state-view');
+    const splitPaneView = document.getElementById('split-pane-view');
+    const domainBannerText = document.getElementById('domain-banner-text');
+    const quickTrackBtn = document.getElementById('quick-track-btn');
+    const toolbarActions = document.getElementById('toolbar-actions');
     
     if (response && response.isTracking) {
+      emptyStateView.classList.add('hidden');
+      emptyStateView.classList.remove('flex');
+      splitPaneView.classList.remove('hidden');
+      toolbarActions.classList.remove('opacity-50', 'pointer-events-none');
+      
       let domainName = "this tab";
       try { domainName = new URL(tab.url).hostname; } catch(e) {}
-      badge.textContent = `Tracking: ${domainName}`;
-      badge.className = 'domain-badge';
+      domainBannerText.textContent = `Tracking: ${domainName}`;
+      domainBannerText.className = "text-code-sm font-code-sm text-primary font-bold";
+      quickTrackBtn.classList.add('hidden');
       
       if (response.logs && response.logs.length > 0) {
         currentLogs = response.logs;
       }
     } else {
-      badge.innerHTML = `Not tracking this tab. <a href="#" id="quick-track-btn" style="color: #8A4B00; text-decoration: underline; margin-left: 5px;">Track this domain</a>`;
-      badge.className = 'domain-badge warning';
-      
-      setTimeout(() => {
-        const quickBtn = document.getElementById('quick-track-btn');
-        if (quickBtn) {
-          quickBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            let domainToAdd;
-            try { domainToAdd = new URL(tab.url).hostname; } catch(err) { return; }
-            chrome.storage.local.get('allowedDomains', (result) => {
-              const domains = result.allowedDomains || [];
-              if (!domains.includes(domainToAdd)) {
-                domains.push(domainToAdd);
-                chrome.storage.local.set({ allowedDomains: domains }, () => {
-                   chrome.runtime.sendMessage({ action: "startTracking", tabId: tab.id, url: tab.url }, () => {
-                     window.close(); // Close popup
-                   });
-                });
-              }
-            });
-          });
-        }
-      }, 0);
+      emptyStateView.classList.remove('hidden');
+      emptyStateView.classList.add('flex');
+      splitPaneView.classList.add('hidden');
+      toolbarActions.classList.add('opacity-50', 'pointer-events-none');
     }
     renderLogList();
   });
+
+  const attachTracking = (e) => {
+    if(e) e.preventDefault();
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0];
+      if(!activeTab) return;
+      let domainToAdd;
+      try { domainToAdd = new URL(activeTab.url).hostname; } catch(err) { return; }
+      chrome.storage.local.get('allowedDomains', (result) => {
+        const domains = result.allowedDomains || [];
+        if (!domains.includes(domainToAdd)) {
+          domains.push(domainToAdd);
+          chrome.storage.local.set({ allowedDomains: domains }, () => {
+             chrome.runtime.sendMessage({ action: "startTracking", tabId: activeTab.id, url: activeTab.url }, () => {
+               window.close();
+             });
+          });
+        } else {
+          // If already in allowed domains but not attached (e.g. extension reloaded)
+          chrome.runtime.sendMessage({ action: "startTracking", tabId: activeTab.id, url: activeTab.url }, () => {
+            window.close();
+          });
+        }
+      });
+    });
+  };
+
+  document.getElementById('empty-track-btn').addEventListener('click', attachTracking);
+  document.getElementById('quick-track-btn').addEventListener('click', attachTracking);
 
   document.getElementById('search-bar').addEventListener('input', renderLogList);
   document.getElementById('xhr-filter').addEventListener('change', renderLogList);
@@ -61,37 +79,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.querySelectorAll('.top-tab').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.top-tab').forEach(el => el.classList.remove('active'));
-      e.target.classList.add('active');
+      document.querySelectorAll('.top-tab').forEach(el => {
+        el.classList.remove('tab-active', 'font-bold');
+        el.classList.add('text-on-surface-variant');
+      });
+      e.target.classList.add('tab-active', 'font-bold');
+      e.target.classList.remove('text-on-surface-variant');
       currentTab = e.target.getAttribute('data-tab');
       updateDetailView();
     });
   });
 
-  // Copy functionality
-  document.getElementById('copy-btn').addEventListener('click', () => {
-    if (currentDataToCopy) {
-      navigator.clipboard.writeText(currentDataToCopy);
-      const btn = document.getElementById('copy-btn');
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-      setTimeout(() => btn.innerHTML = originalHTML, 1500);
-    }
-  });
-
-  // Settings Modal
   const settingsModal = document.getElementById('settings-modal');
   const domainsInput = document.getElementById('domains-input');
 
-  document.getElementById('open-settings').addEventListener('click', () => {
+  const openSettings = () => {
     chrome.storage.local.get('allowedDomains', ({ allowedDomains }) => {
       if (allowedDomains) domainsInput.value = allowedDomains.join('\n');
-      settingsModal.style.display = 'flex';
+      settingsModal.classList.remove('hidden');
     });
-  });
+  };
+
+  document.getElementById('open-settings').addEventListener('click', openSettings);
+  document.getElementById('sidebar-settings-btn').addEventListener('click', openSettings);
 
   document.getElementById('close-settings').addEventListener('click', () => {
-    settingsModal.style.display = 'none';
+    settingsModal.classList.add('hidden');
   });
 
   document.getElementById('save-settings').addEventListener('click', () => {
@@ -103,42 +116,41 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       
     chrome.storage.local.set({ allowedDomains: domains }, () => {
-      settingsModal.style.display = 'none';
+      settingsModal.classList.add('hidden');
     });
   });
 });
 
+function getStatusColorClass(status) {
+  if (!status) return 'bg-secondary-fixed-dim';
+  if (status >= 200 && status < 300) return 'bg-primary';
+  if (status >= 400) return 'bg-error';
+  return 'bg-[#eab308]'; 
+}
+
+function getStatusTextColorClass(status) {
+  if (!status) return 'text-on-surface-variant';
+  if (status >= 200 && status < 300) return 'text-primary';
+  if (status >= 400) return 'text-error';
+  return 'text-[#854d0e]';
+}
+
 function renderLogList() {
   const listContainer = document.getElementById('log-list');
-  const badge = document.getElementById('domain-badge');
-  
-  // Clear the main container and re-attach the sticky badge
   listContainer.innerHTML = '';
-  if (badge) listContainer.appendChild(badge);
-  
-  // Create an inner wrapper for the timeline so the vertical line stretches with the content
-  const itemsContainer = document.createElement('div');
-  itemsContainer.style.position = 'relative';
-  itemsContainer.style.minHeight = '100%';
-  
-  const timelineBg = document.createElement('div');
-  timelineBg.className = 'timeline-bg';
-  itemsContainer.appendChild(timelineBg);
 
   const query = document.getElementById('search-bar').value.toLowerCase();
   const xhrOnly = document.getElementById('xhr-filter').checked;
-
   let hasItems = false;
 
   currentLogs.forEach((log) => {
     if (log.type === 'NAVIGATE') {
       const divider = document.createElement('div');
-      divider.className = 'divider';
+      divider.className = 'flex justify-center my-3';
       let displayUrl = log.url;
       try { displayUrl = new URL(log.url).pathname; } catch(e) {}
-      divider.textContent = `Navigated to ${displayUrl}`;
-      divider.title = log.url;
-      itemsContainer.appendChild(divider);
+      divider.innerHTML = `<span class="bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps px-4 py-1 rounded-full">NAVIGATED TO ${displayUrl}</span>`;
+      listContainer.appendChild(divider);
       return;
     }
 
@@ -148,81 +160,115 @@ function renderLogList() {
     hasItems = true;
 
     const item = document.createElement('div');
-    item.className = 'log-item';
-    if (selectedLog && selectedLog.requestId === log.requestId) {
-      item.className += ' active';
-    }
+    const isActive = selectedLog && selectedLog.requestId === log.requestId;
+    
+    item.className = `grid grid-cols-12 gap-2 px-3 py-1.5 border-b border-outline-variant/50 cursor-pointer transition-colors border-l-2 ${isActive ? 'bg-primary-container/10 border-primary' : 'hover:bg-surface-container-low border-transparent'}`;
 
     let displayUrl = log.url;
     try {
       const urlObj = new URL(log.url);
       displayUrl = urlObj.pathname.split('/').pop() || urlObj.pathname;
-      if (!displayUrl) displayUrl = urlObj.hostname;
+      if (!displayUrl || displayUrl === '/') displayUrl = urlObj.hostname;
     } catch (e) {}
     
-    // Format time like "10:30:00 am"
     const dateObj = new Date(log.timestamp * 1000);
-    let timeStr = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }).toLowerCase();
+    const timeStr = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }).toLowerCase();
+    
+    const statusColor = getStatusColorClass(log.status);
+    const statusText = getStatusTextColorClass(log.status);
 
     item.innerHTML = `
-      <div class="time">${timeStr}</div>
-      <div class="timeline-dot"></div>
-      <div class="log-title" title="${log.url}">${displayUrl}</div>
+      <div class="col-span-5 truncate font-code-sm text-code-sm ${isActive ? 'text-primary font-bold' : 'text-on-surface'}" title="${log.url}">${displayUrl}</div>
+      <div class="col-span-2 font-code-sm text-code-sm text-on-surface-variant">${log.method}</div>
+      <div class="col-span-2 flex items-center gap-1.5">
+        <div class="w-1.5 h-1.5 rounded-full ${statusColor}"></div>
+        <span class="font-code-sm text-code-sm ${statusText} font-bold">${log.status || '...'}</span>
+      </div>
+      <div class="col-span-3 text-right font-code-sm text-code-sm text-on-surface-variant">${timeStr}</div>
     `;
     
     item.addEventListener('click', () => {
-      document.querySelectorAll('.log-item').forEach(el => el.classList.remove('active'));
-      item.classList.add('active');
       selectedLog = log;
+      renderLogList(); 
       updateDetailView();
     });
 
-    itemsContainer.appendChild(item);
+    listContainer.appendChild(item);
   });
 
-  if (!hasItems && currentLogs.filter(l => l.type !== 'NAVIGATE').length === 0) {
-    const emptyState = document.createElement('div');
-    emptyState.className = 'empty-state';
-    
-    // Check if the tab is tracked to decide if we show an empty state or hide the timeline
-    if (badge && badge.classList.contains('warning')) {
-      timelineBg.style.display = 'none'; // Hide the timeline line entirely if not tracking
-    } else {
-      emptyState.textContent = 'No requests captured yet';
-      itemsContainer.appendChild(emptyState);
-    }
+  if (!hasItems) {
+    listContainer.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-12 opacity-30 select-none">
+        <span class="material-symbols-outlined text-[48px] mb-2">network_check</span>
+        <p class="text-body-sm font-bold">Waiting for requests...</p>
+      </div>`;
   }
+}
 
-  listContainer.appendChild(itemsContainer);
+function escapeHtml(unsafe) {
+  if (typeof unsafe !== 'string') return String(unsafe);
+  return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+function syntaxHighlightJSON(jsonStr) {
+  try {
+    const obj = JSON.parse(jsonStr);
+    const pretty = JSON.stringify(obj, null, 2);
+    return pretty.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      let cls = 'text-[#059669]'; 
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = 'text-[#8b5cf6]'; 
+        }
+      } else if (/true|false/.test(match)) {
+        cls = 'text-[#ea580c]'; 
+      } else if (/null/.test(match)) {
+        cls = 'text-on-surface-variant'; 
+      } else {
+        cls = 'text-[#2563eb]'; 
+      }
+      return '<span class="' + cls + '">' + match + '</span>';
+    });
+  } catch (e) {
+    return escapeHtml(jsonStr);
+  }
 }
 
 function renderHeadersList(headersObj) {
-  if (!headersObj || Object.keys(headersObj).length === 0) return '<div class="header-row"><div class="header-key">None</div></div>';
-  let html = '';
+  if (!headersObj || Object.keys(headersObj).length === 0) return '<div class="text-on-surface-variant text-code-sm italic">None</div>';
+  let html = '<div class="space-y-1.5 font-code-sm text-code-sm">';
   for (const [key, value] of Object.entries(headersObj)) {
-    html += `<div class="header-row"><div class="header-key">${key}</div><div class="header-value">${escapeHtml(value)}</div></div>`;
+    html += `
+      <div class="flex gap-4">
+        <span class="text-on-surface-variant w-32 flex-shrink-0">${key}:</span>
+        <span class="text-on-surface break-all">${escapeHtml(value)}</span>
+      </div>`;
   }
+  html += '</div>';
   return html;
 }
 
 function updateDetailView() {
   const contentArea = document.getElementById('detail-content');
-  const detailsHeader = document.getElementById('details-header');
-  const detailsTitle = document.getElementById('details-title');
-  currentDataToCopy = ""; // Reset copy buffer
+  const detailsTabs = document.getElementById('detail-tabs-container');
+  currentDataToCopy = "";
 
   if (!selectedLog) {
-    detailsHeader.style.display = 'none';
-    contentArea.innerHTML = '<div class="empty-state">Select a request to view details</div>';
+    detailsTabs.style.display = 'none';
+    contentArea.innerHTML = `
+      <div class="flex items-center justify-center h-full text-on-surface-variant text-body-sm">
+        Select a request to view details
+      </div>`;
     return;
   }
 
-  detailsHeader.style.display = 'flex';
+  detailsTabs.style.display = 'flex';
   
-  let displayTitle = selectedLog.url;
-  try { displayTitle = new URL(selectedLog.url).pathname; } catch (e) {}
-  detailsTitle.textContent = displayTitle;
-  detailsTitle.title = selectedLog.url;
+  const getCopyButton = () => `
+    <button id="copy-btn" class="flex items-center gap-1 px-2 py-1 bg-primary-container text-on-primary-container rounded text-label-caps font-bold hover:brightness-95 transition-all shadow-sm">
+      <span class="material-symbols-outlined text-[14px]">content_copy</span>
+      COPY ${currentTab.toUpperCase()}
+    </button>`;
 
   if (currentTab === 'headers') {
     currentDataToCopy = JSON.stringify({
@@ -231,69 +277,96 @@ function updateDetailView() {
     }, null, 2);
     
     contentArea.innerHTML = `
-      <div class="header-section">
-        <h4>General</h4>
-        <div class="header-row"><div class="header-key">Request URL</div><div class="header-value">${selectedLog.url}</div></div>
-        <div class="header-row"><div class="header-key">Request Method</div><div class="header-value">${selectedLog.method}</div></div>
-        <div class="header-row"><div class="header-key">Status Code</div><div class="header-value">${selectedLog.status || 'Pending'}</div></div>
-      </div>
-      <div class="header-section">
-        <h4>Response Headers</h4>
+      <section>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-label-caps text-label-caps text-primary">GENERAL</h3>
+          ${getCopyButton()}
+        </div>
+        <div class="space-y-1.5">
+          <div class="flex border-b border-outline-variant/30 py-1">
+            <span class="w-32 flex-shrink-0 text-code-sm text-on-surface-variant">Request URL:</span>
+            <span class="text-code-sm text-on-surface break-all">${selectedLog.url}</span>
+          </div>
+          <div class="flex border-b border-outline-variant/30 py-1">
+            <span class="w-32 flex-shrink-0 text-code-sm text-on-surface-variant">Method:</span>
+            <span class="text-code-sm text-on-surface">${selectedLog.method}</span>
+          </div>
+          <div class="flex border-b border-outline-variant/30 py-1">
+            <span class="w-32 flex-shrink-0 text-code-sm text-on-surface-variant">Status:</span>
+            <span class="text-code-sm font-bold ${getStatusTextColorClass(selectedLog.status)}">${selectedLog.status || 'Pending'}</span>
+          </div>
+        </div>
+      </section>
+      <section class="mt-6">
+        <h3 class="font-label-caps text-label-caps text-primary mb-3">RESPONSE HEADERS</h3>
         ${renderHeadersList(selectedLog.resHeaders)}
-      </div>
-      <div class="header-section">
-        <h4>Request Headers</h4>
+      </section>
+      <section class="mt-6">
+        <h3 class="font-label-caps text-label-caps text-primary mb-3">REQUEST HEADERS</h3>
         ${renderHeadersList(selectedLog.reqHeaders)}
-      </div>
+      </section>
     `;
-    return;
+  } else {
+    let rawContent = '';
+    let isJson = false;
+
+    if (currentTab === 'payload') {
+      rawContent = selectedLog.payload;
+    } else if (currentTab === 'preview') {
+      rawContent = selectedLog.response;
+      try { JSON.parse(rawContent); isJson = true; } catch(e) {}
+    } else if (currentTab === 'response') {
+      rawContent = selectedLog.response;
+    }
+
+    if (!rawContent) {
+      contentArea.innerHTML = `<div class="text-on-surface-variant text-body-sm text-center py-8">No ${currentTab} data available</div>`;
+      return;
+    }
+
+    currentDataToCopy = rawContent;
+
+    if (currentTab === 'preview' && !isJson) {
+      contentArea.innerHTML = `<div class="text-on-surface-variant text-body-sm text-center py-8">Response is not valid JSON. See Response tab.</div>`;
+      return;
+    }
+
+    const title = currentTab === 'payload' ? 'REQUEST PAYLOAD' : (currentTab === 'preview' ? 'JSON PREVIEW' : 'RAW RESPONSE');
+    let displayHtml = '';
+    
+    if (isJson || currentTab === 'payload') {
+      try {
+        JSON.parse(rawContent); 
+        displayHtml = syntaxHighlightJSON(rawContent);
+      } catch(e) {
+        displayHtml = escapeHtml(rawContent);
+      }
+    } else {
+      displayHtml = escapeHtml(rawContent);
+    }
+
+    contentArea.innerHTML = `
+      <section>
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-label-caps text-label-caps text-primary">${title}</h3>
+          ${getCopyButton()}
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl relative group shadow-sm">
+          <pre class="code-block text-code-sm text-on-surface leading-relaxed overflow-x-auto">${displayHtml}</pre>
+        </div>
+      </section>
+    `;
   }
 
-  let codeContent = '';
-  
-  if (currentTab === 'payload') {
-    if (!selectedLog.payload) {
-      contentArea.innerHTML = '<div class="empty-state">No payload data</div>';
-      return;
-    }
-    try {
-      const parsed = JSON.parse(selectedLog.payload);
-      codeContent = JSON.stringify(parsed, null, 2);
-    } catch (e) {
-      codeContent = selectedLog.payload;
-    }
-  } 
-  else if (currentTab === 'preview') {
-    if (!selectedLog.response) {
-      contentArea.innerHTML = '<div class="empty-state">No response data</div>';
-      return;
-    }
-    try {
-      const parsed = JSON.parse(selectedLog.response);
-      codeContent = JSON.stringify(parsed, null, 2);
-    } catch (e) {
-      contentArea.innerHTML = '<div class="empty-state">Response is not valid JSON. See Response tab.</div>';
-      return;
-    }
-  } 
-  else if (currentTab === 'response') {
-    if (!selectedLog.response) {
-      contentArea.innerHTML = '<div class="empty-state">No response data</div>';
-      return;
-    }
-    codeContent = selectedLog.response;
+  const copyBtn = document.getElementById('copy-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      if (currentDataToCopy) {
+        navigator.clipboard.writeText(currentDataToCopy);
+        const originalHTML = copyBtn.innerHTML;
+        copyBtn.innerHTML = `<span class="material-symbols-outlined text-[14px]">check</span> COPIED!`;
+        setTimeout(() => copyBtn.innerHTML = originalHTML, 1500);
+      }
+    });
   }
-  
-  currentDataToCopy = codeContent;
-  contentArea.innerHTML = `<div class="code-view">${escapeHtml(codeContent)}</div>`;
-}
-
-function escapeHtml(unsafe) {
-  if (typeof unsafe !== 'string') return String(unsafe);
-  return unsafe
-       .replace(/&/g, "&amp;")
-       .replace(/</g, "&lt;")
-       .replace(/>/g, "&gt;")
-       .replace(/"/g, "&quot;")
-       .replace(/'/g, "&#039;");
 }
