@@ -110,13 +110,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 function renderLogList() {
   const listContainer = document.getElementById('log-list');
   const badge = document.getElementById('domain-badge');
-  // keep the timeline background line and badge
+  
+  // Clear the main container and re-attach the sticky badge
   listContainer.innerHTML = '';
   if (badge) listContainer.appendChild(badge);
   
+  // Create an inner wrapper for the timeline so the vertical line stretches with the content
+  const itemsContainer = document.createElement('div');
+  itemsContainer.style.position = 'relative';
+  itemsContainer.style.minHeight = '100%';
+  
   const timelineBg = document.createElement('div');
   timelineBg.className = 'timeline-bg';
-  listContainer.appendChild(timelineBg);
+  itemsContainer.appendChild(timelineBg);
 
   const query = document.getElementById('search-bar').value.toLowerCase();
   const xhrOnly = document.getElementById('xhr-filter').checked;
@@ -131,7 +137,7 @@ function renderLogList() {
       try { displayUrl = new URL(log.url).pathname; } catch(e) {}
       divider.textContent = `Navigated to ${displayUrl}`;
       divider.title = log.url;
-      listContainer.appendChild(divider);
+      itemsContainer.appendChild(divider);
       return;
     }
 
@@ -170,12 +176,23 @@ function renderLogList() {
       updateDetailView();
     });
 
-    listContainer.appendChild(item);
+    itemsContainer.appendChild(item);
   });
 
   if (!hasItems && currentLogs.filter(l => l.type !== 'NAVIGATE').length === 0) {
-    listContainer.innerHTML = '<div class="empty-state">No requests match</div>';
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    
+    // Check if the tab is tracked to decide if we show an empty state or hide the timeline
+    if (badge && badge.classList.contains('warning')) {
+      timelineBg.style.display = 'none'; // Hide the timeline line entirely if not tracking
+    } else {
+      emptyState.textContent = 'No requests captured yet';
+      itemsContainer.appendChild(emptyState);
+    }
   }
+
+  listContainer.appendChild(itemsContainer);
 }
 
 function renderHeadersList(headersObj) {
