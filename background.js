@@ -52,11 +52,14 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-function startTracking(tabId, initialUrl) {
+function startTracking(tabId, initialUrl, callback) {
   const target = { tabId: tabId };
   
   chrome.debugger.attach(target, "1.3", () => {
-    if (chrome.runtime.lastError) return;
+    if (chrome.runtime.lastError) {
+      if (callback) callback();
+      return;
+    }
     
     attachedTabs.add(tabId);
     
@@ -70,7 +73,9 @@ function startTracking(tabId, initialUrl) {
       timestamp: Date.now() / 1000
     }];
     
-    chrome.debugger.sendCommand(target, "Network.enable");
+    chrome.debugger.sendCommand(target, "Network.enable", () => {
+      if (callback) callback();
+    });
   });
 }
 
@@ -148,8 +153,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
   } else if (message.action === "startTracking") {
     if (!attachedTabs.has(message.tabId)) {
-      startTracking(message.tabId, message.url);
+      startTracking(message.tabId, message.url, () => {
+        sendResponse({ success: true });
+      });
+      return true; // Keep message channel open for async response
+    } else {
+      sendResponse({ success: true });
     }
-    sendResponse({ success: true });
   }
 });
