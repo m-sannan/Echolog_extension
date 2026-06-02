@@ -100,12 +100,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         domains.push(domainToAdd);
         chrome.storage.local.set({ allowedDomains: domains }, () => {
            chrome.runtime.sendMessage({ action: "startTracking", tabId: activeTab.id, url: activeTab.url }, () => {
-             window.close();
+             location.reload();
            });
         });
       } else {
         chrome.runtime.sendMessage({ action: "startTracking", tabId: activeTab.id, url: activeTab.url }, () => {
-          window.close();
+          location.reload();
         });
       }
     });
