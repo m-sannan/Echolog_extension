@@ -1,0 +1,23 @@
+{
+  "name": "echolog_extension",
+  "version": "1.0.0",
+  "description": "EchoLog is a powerful, lightweight Chrome extension designed to seamlessly capture and log background API traffic. Built for developers, product managers, and QA engineers, it acts as a dedicated logging panel that lets you monitor, format, and copy XHR/Fetch payloads and responses instantly—without ever needing to open the native browser DevTools.",
+  "main": "background.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/m-sannan/Echolog_extension.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/m-sannan/Echolog_extension/issues"
+  },
+  "homepage": "https://github.com/m-sannan/Echolog_extension#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.4"
+  }
+}
