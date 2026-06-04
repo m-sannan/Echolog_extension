@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EchoLog",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Background API payload logger for specific engineering domains.",
   "icons": {
     "16": "echolog_logo.png",
