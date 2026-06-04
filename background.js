@@ -5,7 +5,7 @@ const attachedTabs = new Set();
 
 // Default domains (Empty for open source version)
 chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === "install") {
+  if (details.reason === "install" || details.reason === "update") {
     chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") });
   }
   chrome.storage.local.get('allowedDomains', (result) => {
