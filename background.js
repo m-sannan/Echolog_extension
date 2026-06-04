@@ -4,9 +4,12 @@ const sessionDetails = {}; // Stores { domain, url } for active tabs
 const attachedTabs = new Set();
 
 // Default domains (Empty for open source version)
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") {
+    chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") });
+  }
   chrome.storage.local.get('allowedDomains', (result) => {
-    if (!result.allowedDomains || result.allowedDomains.length === 0) {
+    if (!result.allowedDomains || !Array.isArray(result.allowedDomains)) {
       chrome.storage.local.set({ allowedDomains: [] });
     }
   });
@@ -133,8 +136,7 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
 // Cleanup when detached (e.g. tab closed, user stops debugging, or we detach manually)
 chrome.debugger.onDetach.addListener((source, reason) => {
   attachedTabs.delete(source.tabId);
-  delete networkLogs[source.tabId];
-  delete sessionDetails[source.tabId];
+  // We explicitly do NOT delete networkLogs or sessionDetails here so that historical logs are retained.
 });
 
 // Expose logs and current tracking status to the popup when clicked
