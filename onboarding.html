@@ -45,8 +45,8 @@
         
         <!-- Welcome Header -->
         <section class="mb-10 text-center flex flex-col items-center">
-            <h1 class="text-3xl font-semibold mb-3 tracking-tight text-gray-900">Setup your workspace</h1>
-            <p class="text-gray-500 text-[15px] max-w-[400px]">Start monitoring network traffic by defining your target environments.</p>
+            <h1 class="text-3xl font-semibold mb-3 tracking-tight text-gray-900">EchoLog is ready. Tell it where to watch.</h1>
+            <p class="text-gray-500 text-[15px] max-w-[500px]">Add the URLs you debug most — staging, local, or prod. EchoLog will silently capture API calls in the background, so you're covered even when DevTools isn't open.</p>
         </section>
 
         <!-- Main Configuration Area -->
@@ -70,7 +70,7 @@
 
                     <!-- Suggested Chips -->
                     <div class="flex flex-col items-center gap-3 mb-8">
-                        <span class="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Suggestions</span>
+                        <span class="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Common starting points</span>
                         <div class="flex flex-wrap justify-center gap-2">
                             <button type="button" class="suggested-domain bg-gray-50 border border-gray-200 text-gray-600 font-mono text-[12px] px-3 py-1.5 rounded hover:bg-gray-100 transition-colors">localhost:3000</button>
                             <button type="button" class="suggested-domain bg-gray-50 border border-gray-200 text-gray-600 font-mono text-[12px] px-3 py-1.5 rounded hover:bg-gray-100 transition-colors">api.staging.dev</button>
@@ -96,7 +96,7 @@
                         <div class="w-7 h-7 rounded-full border-2 border-white bg-gray-300"></div>
                         <div class="w-7 h-7 rounded-full border-2 border-white bg-gray-400"></div>
                     </div>
-                    <p class="text-[12px] text-gray-500">Used by <span class="font-medium text-gray-700">3+ developers</span> for now and growing</p>
+                    <p class="text-[12px] text-gray-500">Built by a developer, for developers.</p>
                 </div>
             </div>
         </div>
@@ -108,16 +108,16 @@
                 <h3 class="font-medium text-on-brand text-[14px]">Privacy &amp; Security</h3>
             </div>
             <p class="text-[13px] text-gray-600 leading-relaxed max-w-[500px] mx-auto">
-                During tracking, Chrome will display a <span class="font-medium text-gray-800">"started debugging"</span> notice. This is a standard security protocol. Your data never leaves your browser and is logged locally.
+                All captures stay on your machine — nothing is sent to any server. Chrome may show a <span class="font-medium text-gray-800">"started debugging"</span> notice during active sessions; that's a standard browser behaviour, not a red flag.
             </p>
         </div>
         
         <!-- Final CTA Footer -->
         <footer class="mt-12 flex flex-col items-center gap-6 pb-12">
             <div class="flex items-center justify-center gap-4 w-full">
-                <button id="skipBtn" type="button" class="text-gray-500 text-[14px] font-medium hover:text-gray-900 transition-colors">Skip configuration</button>
+                <button id="skipBtn" type="button" class="text-gray-500 text-[14px] font-medium hover:text-gray-900 transition-colors">Skip for now</button>
                 <button id="finishBtn" type="button" class="bg-brand text-on-brand text-[15px] font-semibold px-8 py-3.5 rounded-xl shadow-sm hover-bg-brand-dark transition-all flex items-center justify-center gap-2 min-w-[200px] opacity-50 pointer-events-none">
-                    Finish Setup
+                    Start Capturing
                     <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </button>
             </div>
