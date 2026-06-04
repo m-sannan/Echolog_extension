@@ -30,20 +30,18 @@
         }
     </style>
 </head>
-<body class="text-gray-900 min-h-screen flex flex-col items-center justify-center relative">
+<body class="text-gray-900 min-h-screen flex flex-col relative">
 
     <!-- Header -->
-    <header class="absolute top-0 left-0 w-full flex justify-center items-center px-8 py-6 bg-transparent">
+    <header class="w-full flex justify-start items-center px-8 py-6 bg-transparent max-w-[900px] mx-auto">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-brand rounded shadow-sm flex items-center justify-center">
-                <span class="material-symbols-outlined text-on-brand text-lg">analytics</span>
-            </div>
+            <img src="echolog_logo.png" width="28" height="28" style="object-fit: contain; border-radius: 4px;">
             <span class="text-xl font-bold tracking-tight">EchoLog</span>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="w-full max-w-[640px] px-6 py-20 flex flex-col mt-10">
+    <main class="w-full max-w-[640px] px-6 py-10 flex flex-col mx-auto flex-1">
         
         <!-- Welcome Header -->
         <section class="mb-10 text-center flex flex-col items-center">
@@ -74,9 +72,9 @@
                     <div class="flex flex-col items-center gap-3 mb-8">
                         <span class="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Suggestions</span>
                         <div class="flex flex-wrap justify-center gap-2">
-                            <button onclick="addDomain('localhost:3000')" class="bg-gray-50 border border-gray-200 text-gray-600 font-mono text-[12px] px-3 py-1.5 rounded hover:bg-gray-100 transition-colors">localhost:3000</button>
-                            <button onclick="addDomain('api.staging.dev')" class="bg-gray-50 border border-gray-200 text-gray-600 font-mono text-[12px] px-3 py-1.5 rounded hover:bg-gray-100 transition-colors">api.staging.dev</button>
-                            <button onclick="addDomain('pre-prod.myapp.io')" class="bg-gray-50 border border-gray-200 text-gray-600 font-mono text-[12px] px-3 py-1.5 rounded hover:bg-gray-100 transition-colors">pre-prod.myapp.io</button>
+                            <button type="button" class="suggested-domain bg-gray-50 border border-gray-200 text-gray-600 font-mono text-[12px] px-3 py-1.5 rounded hover:bg-gray-100 transition-colors">localhost:3000</button>
+                            <button type="button" class="suggested-domain bg-gray-50 border border-gray-200 text-gray-600 font-mono text-[12px] px-3 py-1.5 rounded hover:bg-gray-100 transition-colors">api.staging.dev</button>
+                            <button type="button" class="suggested-domain bg-gray-50 border border-gray-200 text-gray-600 font-mono text-[12px] px-3 py-1.5 rounded hover:bg-gray-100 transition-colors">pre-prod.myapp.io</button>
                         </div>
                     </div>
 
@@ -98,7 +96,7 @@
                         <div class="w-7 h-7 rounded-full border-2 border-white bg-gray-300"></div>
                         <div class="w-7 h-7 rounded-full border-2 border-white bg-gray-400"></div>
                     </div>
-                    <p class="text-[12px] text-gray-500">Used by <span class="font-medium text-gray-700">5,000+ developers</span> worldwide</p>
+                    <p class="text-[12px] text-gray-500">Used by <span class="font-medium text-gray-700">3+ developers</span> for now and growing</p>
                 </div>
             </div>
         </div>
@@ -106,7 +104,7 @@
         <!-- Privacy & Security Notice -->
         <div class="mt-8 bg-brand/10 border border-brand/20 rounded-xl p-5 text-center">
             <div class="flex items-center justify-center gap-2 mb-2 text-brand">
-                <span class="material-symbols-outlined text-lg filled">shield_check</span>
+                <span class="material-symbols-outlined text-lg filled">verified_user</span>
                 <h3 class="font-medium text-on-brand text-[14px]">Privacy &amp; Security</h3>
             </div>
             <p class="text-[13px] text-gray-600 leading-relaxed max-w-[500px] mx-auto">
@@ -115,10 +113,10 @@
         </div>
         
         <!-- Final CTA Footer -->
-        <footer class="mt-12 flex flex-col items-center gap-6">
+        <footer class="mt-12 flex flex-col items-center gap-6 pb-12">
             <div class="flex items-center justify-center gap-4 w-full">
-                <button onclick="window.close()" class="text-gray-500 text-[14px] font-medium hover:text-gray-900 transition-colors">Skip configuration</button>
-                <button id="finishBtn" onclick="finishSetup()" class="bg-brand text-on-brand text-[15px] font-semibold px-8 py-3.5 rounded-xl shadow-sm hover-bg-brand-dark transition-all flex items-center justify-center gap-2 min-w-[200px] opacity-50 pointer-events-none">
+                <button id="skipBtn" type="button" class="text-gray-500 text-[14px] font-medium hover:text-gray-900 transition-colors">Skip configuration</button>
+                <button id="finishBtn" type="button" class="bg-brand text-on-brand text-[15px] font-semibold px-8 py-3.5 rounded-xl shadow-sm hover-bg-brand-dark transition-all flex items-center justify-center gap-2 min-w-[200px] opacity-50 pointer-events-none">
                     Finish Setup
                     <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </button>
@@ -127,99 +125,6 @@
 
     </main>
 
-    <script>
-        const domainList = document.getElementById('domainList');
-        const emptyState = document.getElementById('emptyState');
-        const domainInput = document.getElementById('domainInput');
-        const domainForm = document.getElementById('addDomainForm');
-        const finishBtn = document.getElementById('finishBtn');
-        
-        let domains = [];
-
-        function updateList() {
-            if (domains.length === 0) {
-                emptyState.style.display = 'block';
-                finishBtn.classList.add('opacity-50', 'pointer-events-none');
-            } else {
-                emptyState.style.display = 'none';
-                finishBtn.classList.remove('opacity-50', 'pointer-events-none');
-            }
-            
-            const existingItems = domainList.querySelectorAll('.domain-item');
-            existingItems.forEach(el => el.remove());
-
-            domains.forEach((d, index) => {
-                const div = document.createElement('div');
-                div.className = 'domain-item flex items-center justify-between bg-white border border-gray-200 p-3.5 rounded-lg group hover:border-gray-300 transition-colors';
-                div.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-gray-400 text-[18px]">captive_portal</span>
-                        <span class="font-mono text-gray-700 text-[13px]">${d}</span>
-                    </div>
-                    <button onclick="removeDomain(${index})" class="material-symbols-outlined text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-md hover:bg-red-50 text-[18px]">close</button>
-                `;
-                domainList.appendChild(div);
-            });
-        }
-
-        function addDomain(name) {
-            if (name && !domains.includes(name)) {
-                let parsedName = name;
-                try { 
-                    parsedName = name.startsWith('http') ? new URL(name).host : name.replace(/\/$/, '');
-                } catch(e) {}
-                
-                domains.push(parsedName);
-                updateList();
-            }
-            domainInput.value = '';
-            domainInput.focus();
-        }
-
-        window.addDomain = addDomain;
-        window.removeDomain = function(index) {
-            domains.splice(index, 1);
-            updateList();
-        };
-
-        domainForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            addDomain(domainInput.value.trim());
-        });
-
-        window.finishSetup = function() {
-            const btn = document.getElementById('finishBtn');
-            btn.innerHTML = '<span class="material-symbols-outlined animate-spin" style="animation: spin 1s linear infinite;">sync</span> Finalizing...';
-            btn.classList.add('opacity-80', 'pointer-events-none');
-            
-            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-                chrome.storage.local.get('allowedDomains', (result) => {
-                    const currentDomains = result.allowedDomains || [];
-                    const finalDomains = [...new Set([...currentDomains, ...domains])];
-                    
-                    chrome.storage.local.set({ allowedDomains: finalDomains }, () => {
-                        setTimeout(() => {
-                            alert('Environment ready! You can now use EchoLog.');
-                            window.close();
-                        }, 800);
-                    });
-                });
-            } else {
-                setTimeout(() => {
-                    alert('Environment ready! (Storage API not found, assuming local dev)');
-                    window.close();
-                }, 800);
-            }
-        };
-        
-        const style = document.createElement('style');
-        style.innerHTML = `
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `;
-        document.head.appendChild(style);
-    </script>
+    <script src="onboarding.js"></script>
 </body>
 </html>
