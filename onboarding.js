@@ -11,10 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateList() {
         if (domains.length === 0) {
             emptyState.style.display = 'block';
-            finishBtn.classList.add('opacity-50', 'pointer-events-none');
+            finishBtn.className = "bg-gray-200 text-gray-400 text-[15px] font-semibold px-8 py-3 rounded-xl transition-all flex items-center justify-center gap-2 min-w-[200px] pointer-events-none";
         } else {
             emptyState.style.display = 'none';
-            finishBtn.classList.remove('opacity-50', 'pointer-events-none');
+            finishBtn.className = "bg-brand text-on-brand text-[15px] font-semibold px-8 py-3 rounded-xl shadow-sm hover-bg-brand-dark transition-all flex items-center justify-center gap-2 min-w-[200px] cursor-pointer";
         }
         
         const existingItems = domainList.querySelectorAll('.domain-item');
