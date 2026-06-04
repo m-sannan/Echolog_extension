@@ -166,7 +166,7 @@
             if (name && !domains.includes(name)) {
                 let parsedName = name;
                 try { 
-                    parsedName = name.startsWith('http') ? new URL(name).hostname : name.replace(/\\/$/, '');
+                    parsedName = name.startsWith('http') ? new URL(name).host : name.replace(/\/$/, '');
                 } catch(e) {}
                 
                 domains.push(parsedName);

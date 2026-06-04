@@ -22,7 +22,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     try { url = new URL(tab.url); } catch(e) { return; }
     
     // Check if current domain matches user's allowlist
-    const isAllowed = allowedDomains?.some(domain => url.hostname.includes(domain));
+    const isAllowed = allowedDomains?.some(domain => url.host.includes(domain) || url.hostname.includes(domain));
     
     if (isAllowed) {
       if (!attachedTabs.has(tabId)) {
