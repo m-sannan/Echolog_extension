@@ -93,16 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     chrome.storage.local.set({ allowedDomains: finalDomains }, () => {
                         setTimeout(() => {
-                            alert('Environment ready! You can now use EchoLog.');
                             window.close();
-                        }, 800);
+                        }, 500);
                     });
                 });
             } else {
                 setTimeout(() => {
-                    alert('Environment ready! (Storage API not found, assuming local dev)');
                     window.close();
-                }, 800);
+                }, 500);
             }
         });
     }
