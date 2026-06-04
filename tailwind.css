@@ -446,13 +446,7 @@ video {
   display: none;
 }
 
-body {
-  background-color: #f8f9fa;
-  color: #191c1d;
-  overflow: hidden;
-  width: 900px;
-  height: 600px;
-}
+/* popup specific styles moved to inline tailwind classes */
 
 *, ::before, ::after {
   --tw-border-spacing-x: 0;
